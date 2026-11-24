@@ -1,0 +1,97 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: Algo-Trading-Backend
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+  data:
+    redis:
+      url: ${REDIS_URL}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+app:
+  cors:
+    allowed-origins: ${FRONTEND_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+market-session:
+  zone: Asia/Kolkata
+  open: "09:15"
+  close: "15:30"
+  holidays: ${MARKET_HOLIDAYS:}
+
+market-analytics:
+  enabled: ${MARKET_ANALYTICS_ENABLED:false}
+  poll-interval-millis: ${MARKET_ANALYTICS_POLL_INTERVAL_MILLIS:30000}
+
+strategy:
+  enabled: true
+  markets:
+    - NIFTY
+    - BANKNIFTY
+  timeframe: 5m
+  cooldown-seconds: 300
+  expiry:
+    mode: NEAREST_WEEKLY
+  pcr:
+    strike-range: 8
+    bullish-threshold: 1.10
+    bearish-threshold: 0.90
+    trend-window: 5
+    trend-tolerance: 0
+    minimum-change-oi-denominator: 0
+    trend-method: LINEAR_REGRESSION
+    sampling-interval: SIGNAL_CANDLE
+  vwap:
+    source: CURRENT_MONTH_FUTURES
+    max-distance-atr: 0.5
+  atr:
+    period: 14
+    multiplier: 1.5
+  risk:
+    minimum-reward-risk: 1.5
+    maximum-reward-risk: 2.0
+    oi-buffer: 0
+  paper-trading:
+    enabled: true
+    max-open-trades-per-underlying: 1
+    max-trades-per-session: 10
+    daily-loss-limit: ${PAPER_DAILY_LOSS_LIMIT:0}
+    brokerage-per-order: ${PAPER_BROKERAGE_PER_ORDER:0}
+    slippage-per-unit: ${PAPER_SLIPPAGE_PER_UNIT:0}
+  execution:
+    real-orders-enabled: false
+
+angelone:
+  base-url: ${ANGELONE_BASE_URL:https://apiconnect.angelone.in}
+  instrument-master-url: ${ANGELONE_INSTRUMENT_MASTER_URL:https://margincalculator.angelone.in/OpenAPI_File/files/OpenAPIScripMaster.json}
+  api-key: ${ANGELONE_API_KEY:}
+  client-code: ${ANGELONE_CLIENT_CODE:}
+  pin: ${ANGELONE_PIN:}
+  totp-secret: ${ANGELONE_TOTP_SECRET:}
+  client-local-ip: ${ANGELONE_CLIENT_LOCAL_IP:}
+  client-public-ip: ${ANGELONE_CLIENT_PUBLIC_IP:}
+  mac-address: ${ANGELONE_MAC_ADDRESS:}
+  instrument-refresh-millis: ${ANGELONE_INSTRUMENT_REFRESH_MILLIS:21600000}
+  instrument-master:
+    enabled: ${ANGELONE_INSTRUMENT_MASTER_ENABLED:false}
