@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.sql.Timestamp;
 import java.sql.Types;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.util.Comparator;
 import java.util.List;
@@ -22,7 +23,8 @@ import tools.jackson.databind.JsonNode;
 
 @Service
 public class InstrumentMasterService {
-	private static final DateTimeFormatter ANGEL_EXPIRY = DateTimeFormatter.ofPattern("ddMMMyyyy", Locale.ENGLISH);
+	private static final DateTimeFormatter ANGEL_EXPIRY = new DateTimeFormatterBuilder()
+			.parseCaseInsensitive().appendPattern("ddMMMyyyy").toFormatter(Locale.ENGLISH);
 	private final AngelOneProperties properties;
 	private final RestClient restClient;
 	private final JdbcTemplate jdbcTemplate;
@@ -48,7 +50,7 @@ public class InstrumentMasterService {
 		}
 		List<Instrument> parsed = new java.util.ArrayList<>();
 		root.forEach(node -> parse(node).ifPresent(parsed::add));
-		if (parsed.isEmpty()) throw new IllegalStateException("Angel One instrument master contained no supported index contracts");
+		if (parsed.isEmpty()) throw new IllegalStateException("Angel One instrument master contained no supported NIFTY/BANKNIFTY instruments");
 		persist(parsed);
 		instruments.set(List.copyOf(parsed));
 	}
@@ -97,7 +99,7 @@ public class InstrumentMasterService {
 				.orElseThrow(() -> new IllegalStateException("No current or next-month future contract for " + underlying));
 	}
 
-	private java.util.Optional<Instrument> parse(JsonNode node) {
+	java.util.Optional<Instrument> parse(JsonNode node) {
 		String underlying = text(node, "name");
 		String type = text(node, "instrumenttype");
 		String exchange = text(node, "exch_seg");
@@ -109,7 +111,7 @@ public class InstrumentMasterService {
 		try {
 			String expiryText = text(node, "expiry");
 			LocalDate expiry = expiryText == null || expiryText.isBlank() ? null
-					: LocalDate.parse(expiryText.toUpperCase(Locale.ENGLISH), ANGEL_EXPIRY);
+					: LocalDate.parse(expiryText, ANGEL_EXPIRY);
 			String option = text(node, "symbol");
 			OptionType optionType = option != null && option.endsWith("CE") ? OptionType.CE
 					: option != null && option.endsWith("PE") ? OptionType.PE : null;
